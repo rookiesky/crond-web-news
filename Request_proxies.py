@@ -20,6 +20,7 @@ class Request():
         formatter = logging.Formatter(LOG_FORMAT)
         ch.setFormatter(formatter)
         self.logger.addHandler(ch)
+        self.proxy()
 
 
     def userAgent(self):
@@ -39,11 +40,17 @@ class Request():
 
     def request(self,url, headers = {}):
         try:
+            self.proxiesIp()
+            proxies = {}
+            if self.new_proxies != '':
+                proxies = self.new_proxies
+            
             ua = {'user-agent': self.userAgent()}
             head = {}
             head.update(ua)
             head.update(headers)
-            response = requests.get(url,headers = head, timeout = 120)
+            self.logger.info('proxies:{}'.format(proxies))
+            response = requests.get(url,headers = head, proxies=proxies, timeout = 120)
             return response.text
         except requests.exceptions.ConnectTimeout:
             self.logger.error('http connect time out,url:{},'.format(url))
@@ -52,7 +59,7 @@ class Request():
             self.logger.error('http connection error,url:{},'.format(url))
             return False
         except requests.exceptions.HTTPError as e:
-            self.logger.error('http status error,status code:{},url:{}'.format(e,url))
+            self.logger.error('http status error,status code:{},url:{}'.format(e.code,url))
             response.close()
             return False
         except requests.exceptions.RequestException as e:

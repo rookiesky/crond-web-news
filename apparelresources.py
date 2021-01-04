@@ -60,6 +60,8 @@ def main():
     ]
     for url in urls:
         articleList(url)
+    
+    request.logger.info('get apparelresources Success!')
 
 
 main()

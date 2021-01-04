@@ -69,6 +69,7 @@ def main():
     soup = ''
     
     list_url = list_url[9:]
+    request.logger.info(len(list_url))
     request.logger.info(list_url[0])
     article()
     request.logger.info('Success!')

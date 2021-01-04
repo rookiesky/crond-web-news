@@ -1,8 +1,12 @@
 import requests
 import random
 import logging
+import json
 
 class Request():
+
+    proxy_list = []
+    new_proxies = {}
 
     def __init__(self):
         LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
@@ -16,6 +20,7 @@ class Request():
         formatter = logging.Formatter(LOG_FORMAT)
         ch.setFormatter(formatter)
         self.logger.addHandler(ch)
+        self.proxy()
 
 
     def userAgent(self):
@@ -35,11 +40,17 @@ class Request():
 
     def request(self,url, headers = {}):
         try:
+            self.proxiesIp()
+            proxies = {}
+            if self.new_proxies != '':
+                proxies = self.new_proxies
+            
             ua = {'user-agent': self.userAgent()}
             head = {}
             head.update(ua)
             head.update(headers)
-            response = requests.get(url,headers = head, timeout = 120)
+            self.logger.info('proxies:{}'.format(proxies))
+            response = requests.get(url,headers = head, proxies=proxies, timeout = 120)
             return response.text
         except requests.exceptions.ConnectTimeout:
             self.logger.error('http connect time out,url:{},'.format(url))
@@ -54,7 +65,15 @@ class Request():
         except requests.exceptions.RequestException as e:
             self.logger.error('error:{}'.format(e))
             return False
-                    
+
+    def checkProxy(self,url, headers = {}):
+        if len(self.proxy_list) > 0:
+            self.proxiesIp()
+            return self.request(url, headers)
+        else:
+            self.logger.info('http proxies list is rmpty,exit')
+            exit()
+
     def requestPost(self,wordpress_api,data):
         try:
             response = requests.post(wordpress_api,data=data)
@@ -73,3 +92,38 @@ class Request():
             return False
         finally:
             response.close()
+    
+    def dowloadProxy(self):
+        r = requests.get('https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list')
+        data = r.text.split("\n")
+        return data
+    
+    def checkIp(self,proxies):
+        try:
+            r = requests.get('https://www.google.com', proxies=proxies, timeout=30)
+            if r.status_code <= 200:
+                return True
+            else:
+                return False
+        except:
+            return False
+
+    def proxiesIp(self):
+        for item in range(len(self.proxy_list)):
+            ip = self.checkIp(self.proxy_list[0])
+            if ip == True:
+                self.new_proxies = self.proxy_list[0]
+                return True
+            else:
+                del self.proxy_list[0]
+                return self.proxiesIp()
+
+
+    def proxy(self):
+        data = self.dowloadProxy()
+        for item in data:
+            if item != '':
+                item = json.loads(item)
+                self.proxy_list.append({item['type']:item['host'] + ':' + str(item['port'])})
+        
+        

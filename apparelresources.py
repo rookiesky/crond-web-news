@@ -63,5 +63,7 @@ def main():
     
     request.logger.info('get apparelresources Success!')
 
-
-main()
+try:
+    main()
+except:
+    exit()

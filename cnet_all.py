@@ -108,16 +108,15 @@ def article():
             data = ''
         
 def main():
-    global url, list_url, request
-    
-    articleListUrl(url)
-    if(len(list_url) <= 0):
-        request.logger.info('list url is empty')
-        exit()
-    article()
-    request.logger.info('CENT Reptile Success')
+    global url, list_url
+    for i in range(2600,0,-1):
+        link = url + str(i) + '/'
+        articleListUrl(link)
+        if(len(list_url) <= 0):
+            continue
+        article()
+        request.logger.info('Reptile Page:{}'.format(i))
+        request.logger.info('sleep 5s loadding...')
+        time.sleep(5)
 
-try:
-    main()
-except:
-    exit()
+main()

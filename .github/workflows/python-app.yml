@@ -27,5 +27,5 @@ jobs:
     - name: Run Code
       run: |
         python apparelresources.py
-        python cent.py
+        python cnet.py
 
